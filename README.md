@@ -113,8 +113,8 @@ Make sure you have the following installed on your machine:
 **Cloning the Repository**
 
 ```bash
-git clone https://github.com/JavaScript-Mastery-Pro/uber.git
-cd uber
+git clone https://github.com/JavaScript-Mastery-Pro/wizer.git
+cd wizer
 ```
 
 **Installation**
@@ -141,14 +141,15 @@ EXPO_PUBLIC_SERVER_URL=https://uber.dev/
 
 EXPO_PUBLIC_GEOAPIFY_API_KEY=
 
-EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-STRIPE_SECRET_KEY=
+EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+GOOGLE_PAY_MERCHANT_ID=your_actual_merchant_id_here
 ```
 
-Replace the placeholder values with your actual Clerk, Stripe, NeonDB, Google Maps, andgeoapify credentials. You can
+Replace the placeholder values with your actual Clerk, Stripe, NeonDB, Google Maps, geoapify, and Google Pay credentials. You can
 obtain these credentials by signing up on
-the [Clerk](https://clerk.com/), [Stripe](https://stripe.com/in), [NeonDB](https://neon.tech/), [Google Maps](https://console.cloud.google.com/)
-and [geoapify](https://www.geoapify.com/) websites respectively.
+the [Clerk](https://clerk.com/), [Stripe](https://stripe.com/in), [NeonDB](https://neon.tech/), [Google Maps](https://console.cloud.google.com/),
+[geoapify](https://www.geoapify.com/), and [Google Pay](https://developers.google.com/pay/api) websites respectively.
 
 **Running the Project**
 
@@ -157,6 +158,47 @@ npx expo start
 ```
 
 Download the [Expo Go](https://expo.dev/go) app and Scan the QR code on your respective device to view the project.
+
+## <a name="google-pay-troubleshooting">🔧 Google Pay Troubleshooting</a>
+
+If Google Pay is not showing up in the payment sheet, here are the most common issues and solutions:
+
+### **1. Device Requirements**
+- **Android**: Device must have Google Play Services installed and updated
+- **iOS**: Device must have Apple Pay set up in Wallet app
+- **Physical Device**: Google Pay may not work properly in simulators
+
+### **2. Stripe Configuration**
+- Ensure your Stripe account has Google Pay enabled
+- Verify your merchant identifier is correctly configured
+- Check that your Stripe publishable key is from a live/test environment that supports Google Pay
+
+### **3. App Configuration**
+- Make sure the `merchantIdentifier` in `app.json` matches your Stripe merchant ID
+- Verify the bundle identifier/package name is consistent across your app
+- Ensure the Stripe plugin is properly configured in `app.json`
+
+### **4. Environment Variables**
+- Set `GOOGLE_PAY_MERCHANT_ID` in your `.env` file
+- Use the correct Stripe publishable key for your environment
+
+### **5. Testing**
+- Test on a physical device, not a simulator
+- Ensure you have a Google Pay account set up on your device
+- Try with a small test amount first
+
+### **6. Debug Steps**
+1. Check the console logs for any error messages
+2. Verify that `google_pay` is included in `paymentMethodTypes`
+3. Ensure your Stripe account supports the payment methods you're trying to use
+
+### **7. Common Solutions**
+- **Rebuild the app**: Sometimes configuration changes require a fresh build
+- **Clear app data**: Remove and reinstall the app
+- **Check Stripe Dashboard**: Verify Google Pay is enabled in your Stripe account
+- **Update dependencies**: Ensure you're using the latest version of `@stripe/stripe-react-native`
+
+If you're still having issues, check the [Stripe React Native documentation](https://stripe.com/docs/stripe-react-native) for the most up-to-date setup instructions.
 
 ## <a name="snippets">🕸️ Snippets</a>
 
@@ -1068,7 +1110,7 @@ VALUES
 ('2', 'David', 'Brown', 'https://ucarecdn.com/6ea6d83d-ef1a-483f-9106-837a3a5b3f67/-/preview/1000x666/', 'https://ucarecdn.com/a3872f80-c094-409c-82f8-c9ff38429327/-/preview/930x932/', 5, '4.60'),
 ('3', 'Michael', 'Johnson', 'https://ucarecdn.com/0330d85c-232e-4c30-bd04-e5e4d0e3d688/-/preview/826x822/', 'https://ucarecdn.com/289764fb-55b6-4427-b1d1-f655987b4a14/-/preview/930x932/', 4, '4.70'),
 ('4', 'Robert', 'Green', 'https://ucarecdn.com/fdfc54df-9d24-40f7-b7d3-6f391561c0db/-/preview/626x417/', 'https://ucarecdn.com/b6fb3b55-7676-4ff3-8484-fb115e268d32/-/preview/930x932/', 4, '4.90');
-`````
+```
 
 </details>
 

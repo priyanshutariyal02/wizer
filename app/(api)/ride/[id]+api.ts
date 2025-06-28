@@ -1,12 +1,12 @@
-import { neon } from "@neondatabase/serverless";
+import { getDatabaseConnection } from "../../../lib/database";
 
 export async function GET(request: Request, { id }: { id: string }) {
   if (!id)
     return Response.json({ error: "Missing required fields" }, { status: 400 });
 
   try {
-    const sql = neon(`${process.env.DATABASE_URL}`);
-    const response = await sql`
+    const db = getDatabaseConnection();
+    const response = await db.query`
         SELECT
             rides.ride_id,
             rides.origin_address,
@@ -19,15 +19,13 @@ export async function GET(request: Request, { id }: { id: string }) {
             rides.fare_price,
             rides.payment_status,
             rides.created_at,
-            'driver', json_build_object(
-                'driver_id', drivers.id,
-                'first_name', drivers.first_name,
-                'last_name', drivers.last_name,
-                'profile_image_url', drivers.profile_image_url,
-                'car_image_url', drivers.car_image_url,
-                'car_seats', drivers.car_seats,
-                'rating', drivers.rating
-            ) AS driver 
+            drivers.id as driver_id,
+            drivers.first_name,
+            drivers.last_name,
+            drivers.profile_image_url,
+            drivers.car_image_url,
+            drivers.car_seats,
+            drivers.rating
         FROM 
             rides
         INNER JOIN
@@ -35,7 +33,7 @@ export async function GET(request: Request, { id }: { id: string }) {
         WHERE 
             rides.user_id = ${id}
         ORDER BY 
-            rides.created_at DESC;
+            rides.created_at DESC
     `;
 
     return Response.json({ data: response });

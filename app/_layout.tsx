@@ -5,6 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { LogBox } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { tokenCache } from "@/lib/auth";
 
@@ -19,7 +20,16 @@ if (!publishableKey) {
   );
 }
 
-LogBox.ignoreLogs(["Clerk:"]);
+// Ignore specific warnings
+LogBox.ignoreLogs([
+  "Clerk:",
+  "BackHandler.removeEventListener",
+  "BackHandler.addEventListener",
+  "BackHandler.removeEventListener is not a function",
+  "BackHandler.addEventListener is not a function",
+  "[Reanimated] Reading from `value` during component render",
+  "No task registered for key StripeKeepJsAwakeTask",
+]);
 
 export default function RootLayout() {
   const [loaded] = useFonts({
@@ -45,10 +55,15 @@ export default function RootLayout() {
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
       <ClerkLoaded>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(root)" options={{ headerShown: false }} />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            gestureEnabled: true,
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(root)" />
           <Stack.Screen name="+not-found" />
         </Stack>
       </ClerkLoaded>

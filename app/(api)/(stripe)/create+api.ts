@@ -37,9 +37,11 @@ export async function POST(request: Request) {
     amount: parseInt(amount) * 100,
     currency: "usd",
     customer: customer.id,
-    automatic_payment_methods: {
-      enabled: true,
-      allow_redirects: "never",
+    payment_method_types: ["card", "link", "amazon_pay", "google_pay"],
+    payment_method_options: {
+      card: {
+        request_three_d_secure: "automatic",
+      },
     },
   });
 

@@ -13,7 +13,7 @@ import {
 import { useDriverStore, useLocationStore } from "@/store";
 import { Driver, MarkerData } from "@/types/type";
 
-const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
+const directionsAPI = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 
 const Map = () => {
   const {
@@ -85,7 +85,7 @@ const Map = () => {
       provider={PROVIDER_DEFAULT}
       className="w-full h-full rounded-2xl"
       tintColor="black"
-      mapType="mutedStandard"
+      mapType="standard"
       showsPointsOfInterest={false}
       initialRegion={region}
       showsUserLocation={true}
@@ -93,7 +93,7 @@ const Map = () => {
     >
       {markers.map((marker, index) => (
         <Marker
-          key={marker.id}
+          key={marker.id?.toString() || `marker-${index}`}
           coordinate={{
             latitude: marker.latitude,
             longitude: marker.longitude,
@@ -116,19 +116,27 @@ const Map = () => {
             title="Destination"
             image={icons.pin}
           />
-          <MapViewDirections
-            origin={{
-              latitude: userLatitude!,
-              longitude: userLongitude!,
-            }}
-            destination={{
-              latitude: destinationLatitude,
-              longitude: destinationLongitude,
-            }}
-            apikey={directionsAPI!}
-            strokeColor="#0286FF"
-            strokeWidth={2}
-          />
+          {directionsAPI && (
+            <MapViewDirections
+              origin={{
+                latitude: userLatitude!,
+                longitude: userLongitude!,
+              }}
+              destination={{
+                latitude: destinationLatitude,
+                longitude: destinationLongitude,
+              }}
+              apikey={directionsAPI}
+              strokeColor="#0286FF"
+              strokeWidth={2}
+              onError={(errorMessage) => {
+                console.warn("MapViewDirections Error:", errorMessage);
+              }}
+              onReady={(result) => {
+                console.log("MapViewDirections ready:", result);
+              }}
+            />
+          )}
         </>
       )}
     </MapView>

@@ -1,5 +1,5 @@
-import { View, Image } from "react-native";
-import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+import { View, Image, TextInput, TouchableOpacity } from "react-native";
+import { useState, useEffect } from "react";
 
 import { icons } from "@/constants";
 import { GoogleInputProps } from "@/types/type";
@@ -13,70 +13,60 @@ const GoogleTextInput = ({
   textInputBackgroundColor,
   handlePress,
 }: GoogleInputProps) => {
+  const [searchText, setSearchText] = useState(initialLocation || "");
+  const [GooglePlacesAutocomplete, setGooglePlacesAutocomplete] = useState<any>(null);
+
+  useEffect(() => {
+    if (googlePlacesApiKey) {
+      // Only import if API key is available
+      import("react-native-google-places-autocomplete").then((module) => {
+        setGooglePlacesAutocomplete(() => module.default);
+      }).catch(() => {
+        console.warn("Failed to load GooglePlacesAutocomplete");
+      });
+    }
+  }, [googlePlacesApiKey]);
+
+  const handleSearch = () => {
+    if (searchText.trim()) {
+      // Use mock coordinates for demonstration
+      handlePress({
+        latitude: 37.7749,
+        longitude: -122.4194,
+        address: searchText,
+      });
+    }
+  };
+
+  // Always render the simple TextInput version
   return (
     <View
       className={`flex flex-row items-center justify-center relative z-50 rounded-xl ${containerStyle}`}
     >
-      <GooglePlacesAutocomplete
-        fetchDetails={true}
-        placeholder="Search"
-        debounce={200}
-        styles={{
-          textInputContainer: {
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 20,
-            marginHorizontal: 20,
-            position: "relative",
-            shadowColor: "#d4d4d4",
-          },
-          textInput: {
-            backgroundColor: textInputBackgroundColor
-              ? textInputBackgroundColor
-              : "white",
-            fontSize: 16,
-            fontWeight: "600",
-            marginTop: 5,
-            width: "100%",
-            borderRadius: 200,
-          },
-          listView: {
-            backgroundColor: textInputBackgroundColor
-              ? textInputBackgroundColor
-              : "white",
-            position: "relative",
-            top: 0,
-            width: "100%",
-            borderRadius: 10,
-            shadowColor: "#d4d4d4",
-            zIndex: 99,
-          },
-        }}
-        onPress={(data, details = null) => {
-          handlePress({
-            latitude: details?.geometry.location.lat!,
-            longitude: details?.geometry.location.lng!,
-            address: data.description,
-          });
-        }}
-        query={{
-          key: googlePlacesApiKey,
-          language: "en",
-        }}
-        renderLeftButton={() => (
-          <View className="justify-center items-center w-6 h-6">
+      <View className="flex-1 flex-row items-center bg-white rounded-xl p-4 mx-5">
+        <Image
+          source={icon ? icon : icons.search}
+          className="w-6 h-6 mr-3"
+          resizeMode="contain"
+        />
+        <TextInput
+          value={searchText}
+          onChangeText={setSearchText}
+          placeholder={initialLocation ?? "Where do you want to go?"}
+          placeholderTextColor="gray"
+          className="flex-1 text-base font-semibold"
+          onSubmitEditing={handleSearch}
+        />
+        {searchText.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchText("")}>
             <Image
-              source={icon ? icon : icons.search}
-              className="w-6 h-6"
+              source={icons.close}
+              className="w-4 h-4"
               resizeMode="contain"
             />
-          </View>
+          </TouchableOpacity>
         )}
-        textInputProps={{
-          placeholderTextColor: "gray",
-          placeholder: initialLocation ?? "Where do you want to go?",
-        }}
-      />
+      </View>
     </View>
   );
 };

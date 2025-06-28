@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import { getDatabaseConnection } from "../../../lib/database";
 
 export async function POST(request: Request) {
   try {
@@ -32,13 +32,18 @@ export async function POST(request: Request) {
     ) {
       return Response.json(
         { error: "Missing required fields" },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
       );
     }
 
-    const sql = neon(`${process.env.DATABASE_URL}`);
+    const db = getDatabaseConnection();
 
-    const response = await sql`
+    const response = await db.query`
       INSERT INTO rides ( 
           origin_address, 
           destination_address, 
@@ -64,12 +69,24 @@ export async function POST(request: Request) {
           ${driver_id},
           ${user_id}
       )
-      RETURNING *;
     `;
 
-    return Response.json({ data: response[0] }, { status: 201 });
+    return Response.json({ data: response[0] }, { 
+      status: 201,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   } catch (error) {
     console.error("Error inserting data into recent_rides:", error);
-    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+    return Response.json({ 
+      error: "Failed to create ride",
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { 
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }

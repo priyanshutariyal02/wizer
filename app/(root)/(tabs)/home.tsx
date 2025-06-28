@@ -78,7 +78,7 @@ const Home = () => {
       <FlatList
         data={recentRides?.slice(0, 5)}
         renderItem={({ item }) => <RideCard ride={item} />}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.ride_id?.toString() || item.created_at || Math.random().toString()}
         className="px-5"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{

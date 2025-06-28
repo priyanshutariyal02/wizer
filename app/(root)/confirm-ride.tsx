@@ -13,7 +13,7 @@ const ConfirmRide = () => {
     <RideLayout title={"Choose a Rider"} snapPoints={["65%", "85%"]}>
       <FlatList
         data={drivers}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
         renderItem={({ item, index }) => (
           <DriverCard
             item={item}

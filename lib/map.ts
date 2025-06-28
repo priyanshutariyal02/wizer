@@ -1,6 +1,6 @@
 import { Driver, MarkerData } from "@/types/type";
 
-const directionsAPI = process.env.EXPO_PUBLIC_DIRECTIONS_API_KEY;
+const directionsAPI = process.env.EXPO_PUBLIC_GOOGLE_API_KEY;
 
 export const generateMarkersFromData = ({
   data,
@@ -11,7 +11,7 @@ export const generateMarkersFromData = ({
   userLatitude: number;
   userLongitude: number;
 }): MarkerData[] => {
-  return data.map((driver) => {
+  return data.map((driver, index) => {
     const latOffset = (Math.random() - 0.5) * 0.01; // Random offset between -0.005 and 0.005
     const lngOffset = (Math.random() - 0.5) * 0.01; // Random offset between -0.005 and 0.005
 
@@ -19,7 +19,13 @@ export const generateMarkersFromData = ({
       latitude: userLatitude + latOffset,
       longitude: userLongitude + lngOffset,
       title: `${driver.first_name} ${driver.last_name}`,
-      ...driver,
+      id: driver.driver_id || index + 1, // Fallback to index + 1 if driver_id is undefined
+      first_name: driver.first_name,
+      last_name: driver.last_name,
+      profile_image_url: driver.profile_image_url,
+      car_image_url: driver.car_image_url,
+      car_seats: driver.car_seats,
+      rating: driver.rating,
     };
   });
 };
@@ -95,27 +101,62 @@ export const calculateDriverTimes = async ({
 
   try {
     const timesPromises = markers.map(async (marker) => {
-      const responseToUser = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${marker.latitude},${marker.longitude}&destination=${userLatitude},${userLongitude}&key=${directionsAPI}`,
-      );
-      const dataToUser = await responseToUser.json();
-      const timeToUser = dataToUser.routes[0].legs[0].duration.value; // Time in seconds
+      try {
+        // Calculate time from driver to user
+        const responseToUser = await fetch(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${marker.latitude},${marker.longitude}&destination=${userLatitude},${userLongitude}&key=${directionsAPI}`,
+        );
+        const dataToUser = await responseToUser.json();
+        
+        let timeToUser: number;
+        // Check if the response is valid and contains routes
+        if (dataToUser.status !== 'OK' || !dataToUser.routes || dataToUser.routes.length === 0) {
+          console.warn(`No route found from driver to user: ${dataToUser.status}`);
+          // Use a default time if no route is found
+          timeToUser = 300; // 5 minutes default
+        } else {
+          timeToUser = dataToUser.routes[0].legs[0].duration.value; // Time in seconds
+        }
 
-      const responseToDestination = await fetch(
-        `https://maps.googleapis.com/maps/api/directions/json?origin=${userLatitude},${userLongitude}&destination=${destinationLatitude},${destinationLongitude}&key=${directionsAPI}`,
-      );
-      const dataToDestination = await responseToDestination.json();
-      const timeToDestination =
-        dataToDestination.routes[0].legs[0].duration.value; // Time in seconds
+        // Calculate time from user to destination
+        const responseToDestination = await fetch(
+          `https://maps.googleapis.com/maps/api/directions/json?origin=${userLatitude},${userLongitude}&destination=${destinationLatitude},${destinationLongitude}&key=${directionsAPI}`,
+        );
+        const dataToDestination = await responseToDestination.json();
+        
+        let timeToDestination: number;
+        // Check if the response is valid and contains routes
+        if (dataToDestination.status !== 'OK' || !dataToDestination.routes || dataToDestination.routes.length === 0) {
+          console.warn(`No route found from user to destination: ${dataToDestination.status}`);
+          // Use a default time if no route is found
+          timeToDestination = 600; // 10 minutes default
+        } else {
+          timeToDestination = dataToDestination.routes[0].legs[0].duration.value; // Time in seconds
+        }
 
-      const totalTime = (timeToUser + timeToDestination) / 60; // Total time in minutes
-      const price = (totalTime * 0.5).toFixed(2); // Calculate price based on time
+        const totalTime = (timeToUser + timeToDestination) / 60; // Total time in minutes
+        const price = (totalTime * 0.5).toFixed(2); // Calculate price based on time
 
-      return { ...marker, time: totalTime, price };
+        return { ...marker, time: totalTime, price };
+      } catch (error) {
+        console.error(`Error calculating times for driver ${marker.id}:`, error);
+        // Return driver with default values if calculation fails
+        return { 
+          ...marker, 
+          time: 15, // 15 minutes default
+          price: "7.50" // Default price
+        };
+      }
     });
 
     return await Promise.all(timesPromises);
   } catch (error) {
     console.error("Error calculating driver times:", error);
+    // Return original markers with default values if all calculations fail
+    return markers.map(marker => ({
+      ...marker,
+      time: 15, // 15 minutes default
+      price: "7.50" // Default price
+    }));
   }
 };

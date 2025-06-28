@@ -3,10 +3,27 @@ import { useState, useEffect, useCallback } from "react";
 export const fetchAPI = async (url: string, options?: RequestInit) => {
   try {
     const response = await fetch(url, options);
+    
     if (!response.ok) {
-      new Error(`HTTP error! status: ${response.status}`);
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Unknown error'}`);
+      } else {
+        // Handle non-JSON responses (like HTML error pages)
+        const textResponse = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, response: ${textResponse.substring(0, 200)}...`);
+      }
     }
-    return await response.json();
+    
+    // Check if response is JSON before parsing
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return await response.json();
+    } else {
+      throw new Error("Expected JSON response but received non-JSON content");
+    }
   } catch (error) {
     console.error("Fetch error:", error);
     throw error;

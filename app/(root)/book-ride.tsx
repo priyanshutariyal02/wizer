@@ -17,10 +17,24 @@ const BookRide = () => {
     (driver) => +driver.id === selectedDriver,
   )[0];
 
+  const stripePublishableKey = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+
+  if (!stripePublishableKey) {
+    return (
+      <RideLayout title="Book Ride">
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-lg font-JakartaMedium text-red-500">
+            Stripe configuration error. Please check your environment variables.
+          </Text>
+        </View>
+      </RideLayout>
+    );
+  }
+
   return (
     <StripeProvider
-      publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
-      merchantIdentifier="merchant.com.uber"
+      publishableKey={stripePublishableKey}
+      merchantIdentifier="merchant.com.wizer"
       urlScheme="myapp"
     >
       <RideLayout title="Book Ride">
